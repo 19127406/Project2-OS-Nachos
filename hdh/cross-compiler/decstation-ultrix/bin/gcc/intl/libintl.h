@@ -1,1 +1,0 @@
-../../../gcc-2.95.3/gcc/intl/libgettext.h
