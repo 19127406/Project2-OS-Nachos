@@ -5,10 +5,9 @@ ThreadRoot:
         pushl %ebp
         movl %esp,%ebp
         pushl %edx
-        call * %ecx
-        call * %esi
-        call * %edi
-        # NOT REACHED
+        call *%ecx
+        call *%esi
+        call *%edi
         movl %ebp,%esp
         popl %ebp
         ret

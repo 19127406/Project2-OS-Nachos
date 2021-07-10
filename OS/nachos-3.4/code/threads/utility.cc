@@ -11,17 +11,16 @@
 
 // this seems to be dependent on how the compiler is configured.
 // if you have problems with va_start, try both of these alternatives
-/*#ifdef HOST_SNAKE
+#ifdef HOST_SNAKE
 #include <stdarg.h>
 #else
 #ifdef HOST_SPARC
 #include <stdarg.h>
 #else
-#include "/usr/include/stdarg.h"
+#include "stdarg.h"
 #endif
 #endif
-*/
-#include <stdarg.h>
+
 static char *enableFlags = NULL; // controls which DEBUG messages are printed 
 
 //----------------------------------------------------------------------

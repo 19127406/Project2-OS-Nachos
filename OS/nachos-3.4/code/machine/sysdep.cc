@@ -26,7 +26,6 @@
 #include "copyright.h"
 
 extern "C" {
-  //#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
@@ -37,13 +36,16 @@ extern "C" {
 #include <sys/un.h>
 #include <sys/mman.h>
 #ifdef HOST_i386
+#include <unistd.h>
 #include <sys/time.h>
+#include <errno.h>
 #endif
 #ifdef HOST_SPARC
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/time.h>
 #endif
 
-#include<errno.h>
 
 // UNIX routines called by procedures in this file 
 
@@ -58,19 +60,23 @@ extern "C" {
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
              struct timeval *timeout);
 #else
+#ifdef HOST_SPARC
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+             struct timeval *timeout);
+#else
 int select(int numBits, void *readFds, void *writeFds, void *exceptFds, 
 	struct timeval *timeout);
 #endif
 #endif
+#endif
 
-  int getpagesize(void);
-int unlink(char *name);
-int read(int filedes, char *buf, int numBytes);
-int write(int filedes, char *buf, int numBytes);
-int lseek(int filedes, int offset, int whence);
-int tell(int filedes);
-int close(int filedes);
-int unlink(char *name);
+  //int unlink(char *name);
+  //int read(int filedes, char *buf, int numBytes);
+  //int write(int filedes, char *buf, int numBytes);
+  //int lseek(int filedes, int offset, int whence);
+  //int tell(int filedes);
+  //int close(int filedes);
+  //int unlink(char *name);
 
 // definition varies slightly from platform to platform, so don't 
 // define unless gcc complains
@@ -83,14 +89,12 @@ int rand(void);
 unsigned sleep(unsigned);
 void abort();
 void exit(int);
-int mprotect(__ptr_t addr, size_t len, int prot);
+  //int mprotect(char *addr, int len, int prot);
 
-int socket(int, int, int);
-int bind (int, __CONST_SOCKADDR_ARG, socklen_t);
-
-int recvfrom (int, __ptr_t, size_t, int, __SOCKADDR_ARG, socklen_t *);
-
-int sendto (int, __const void*, size_t, int,__CONST_SOCKADDR_ARG , socklen_t);
+  //int socket(int, int, int);
+  //int bind (int, const void*, int);
+  //int recvfrom (int, void*, int, int, void*, int *);
+  //int sendto (int, const void*, int, int, void*, int);
 }
 
 #include "interrupt.h"
@@ -127,7 +131,7 @@ PollFile(int fd)
         pollTime.tv_usec = 0;                 	// no delay
 
 // poll file or socket
-#ifdef HOST_i386
+#if (defined(HOST_i386) || defined(HOST_SPARC)) 
     retVal = select(32, (fd_set*)&rfd, (fd_set*)&wfd, (fd_set*)&xfd, &pollTime);
 #else
     retVal = select(32, &rfd, &wfd, &xfd, &pollTime);
@@ -351,16 +355,20 @@ void
 ReadFromSocket(int sockID, char *buffer, int packetSize)
 {
     int retVal;
-    //extern int errno;
+    //    extern int errno;	errno sometimes defined as a macro
     struct sockaddr_un uName;
-    socklen_t size = sizeof(uName);
-   
+#ifdef HOST_i386
+    unsigned int size = sizeof(uName);
+#else
+    int size = sizeof(uName);
+#endif
+
     retVal = recvfrom(sockID, buffer, packetSize, 0,
-				   (struct sockaddr *) &uName, (socklen_t *) &size);
+				   (struct sockaddr *) &uName, &size);
 
     if (retVal != packetSize) {
         perror("in recvfrom");
-        printf("called: %x, got back %d, %d\n", buffer, retVal, errno);
+        printf("called: %x, got back %d, %d\n", (unsigned int) buffer, retVal, errno);
     }
     ASSERT(retVal == packetSize);
 }
@@ -378,7 +386,7 @@ SendToSocket(int sockID, char *buffer, int packetSize, char *toName)
 
     InitSocketName(&uName, toName);
     retVal = sendto(sockID, buffer, packetSize, 0,
-			  (const sockaddr *) &uName, sizeof(uName));
+			   (sockaddr*) &uName, sizeof(uName));
     ASSERT(retVal == packetSize);
 }
 
@@ -489,7 +497,7 @@ DeallocBoundedArray(char *ptr, int size)
 {
     int pgSize = getpagesize();
 
-    //mprotect(ptr - pgSize, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
-    //mprotect(ptr + size, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
+    mprotect(ptr - pgSize, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
+    mprotect(ptr + size, pgSize, PROT_READ | PROT_WRITE | PROT_EXEC);
     delete [] (ptr - pgSize);
 }
