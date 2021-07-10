@@ -24,9 +24,11 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "math.h"
 
-#define MAX_INT_LENGTH 	10
-#define MASK_GET_NUM 	0xF
+#define MAX_INT 		2147483647
+#define MAX_INT_LENGTH 		10
+#define MAX_STRING_LENGTH	255
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -98,9 +100,35 @@ int ReadInt() {
 	int nDigit = 0;
 	char* buffer = new char[MAX_INT_LENGTH];
 	nDigit = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
+
+	// Check positive / negative
 	int i = (buffer[0] == '-' ? 1:0);
-	for (; i < nDigit; ++i) 
-		number = number * 10 + (int) (buffer[i] & MASK_GET_NUM);
+
+	// Check if unvalid number -> return 0
+	for(int j = i; j < nDigit; j++) {
+		/// Ex: 3.000
+          	if (buffer[j] == '.') { 
+                	for(int k = j + 1; k < nDigit; k++) {
+                        	if(buffer[k] != '0') {
+                                	printf("\nError: The integer number is not valid\n");
+                                    	machine->WriteRegister(2, 0);
+                                    	delete buffer;
+                                    	return 0;
+                                }
+                        }			
+                        break;                           
+              	}
+                else if ((int)buffer[i] < 48 || (int)buffer[i] > 57) {
+                	printf("\nError: The integer number is not valid\n");
+                        machine->WriteRegister(2, 0);
+                        delete buffer;
+                        return 0;
+              	}    
+    	}
+
+	// Convert to integer
+	for (; i < nDigit; i++) 
+		number = number * 10 + (int)(buffer[i] - 48);
 					
 	number = buffer[0] == '-' ? -1 * number : number;
 	machine->WriteRegister(2, number);
@@ -109,26 +137,66 @@ int ReadInt() {
 }
 
 void PrintInt(int number) {
+	bool isNegative = false;
+	int nDigit = 0;
+	int i = 0;
+       	char* buffer = new char[MAX_INT_LENGTH]
+	int temp1 = = number;
+	if(number < 0) {
+		isNegative = true;
+                temp *= -1; 
+		buffer[i] = '-';
+		i = 1;
+        } 
 	
+	while(temp) {
+    		nDigit++;
+		size++;
+                temp /= 10;
+      	}	
+        
+	            
+	for (; i < MAX_INT_LENGTH; i++) {
+		if (nDigit == 0) 
+			buffer[i] = '\0';
+		else {
+			buffer[i] = (char)((number / (pow(10, nDigit - 1)) % 10) + 48);
+			nDigit--;
+		}
+	}
+	
+	gSynchConsole->Write(buffer, i);
+       	delete buffer;
+        return;
 }
 
 char ReadChar() {
-	int sz;
 	char buffer[MAX_INT_LENGTH];
-	size = gSynchConsole->Read(buf, MAX_INT_LENGTH);
-	machine->WriteRegister(2, buffer[size-1]);
-	return buffer; 
+	int size = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
+	if (size > 1) {
+		printf("\nError: Only 1 character is acceptable.\n");
+		machine->WriteRegister(2, 0);
+	}
+	else if (numBytes == 0) {
+		printf("\nError: Character cannot be null.\n");
+		machine->WriteRegister(2, 0);
+	}
+	else {
+		char ch = buffer[0];
+		machine->WriteRegister(2, ch);
+		return ch; 
+	}
 }
 
 void PrintChar(char character) {
 	gSynchConsole->Write(&character, 1);
 }
 
-void ReadString (char[] buffer, int length) {
+void ReadString(char[] buffer, int length) {
 
 }
 
-void PrintString (char[] buffer) {
+void PrintString(char[] buffer) {
 
 }
 
@@ -186,14 +254,12 @@ ExceptionHandler(ExceptionType which)
 					break;	
 
 				case ReadInt:
-					DEBUG('a', "Read integer number from console.\n");
 					ReadInt();
 					interrupt->Halt();
 					IncreasePC();
 					break;			
 
 				case PrintInt:
-					DEBUG('a', "Print integer number from console.\n");
 					PrintInt(ReadInt());
 					interrupt->Halt();
 					IncreasePC();
@@ -212,11 +278,18 @@ ExceptionHandler(ExceptionType which)
 					break;		
 
 				case ReadString:
+					char* buffer = new char[MAX_STRING_LENGTH];
+					int length;
+					ReadString(buffer, length);
 					interrupt->Halt();
 					IncreasePC();
 					break;		
 
 				case PrintString:
+					char* buffer = new char[MAX_STRING_LENGTH];
+					int length;
+					ReadString(buffer, length);
+					PrintString(buffer, length);
 					interrupt->Halt();
 					IncreasePC();
 					break;		
