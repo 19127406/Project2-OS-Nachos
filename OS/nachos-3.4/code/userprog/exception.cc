@@ -25,6 +25,9 @@
 #include "system.h"
 #include "syscall.h"
 
+#define MAX_INT_LENGTH 	10
+#define MASK_GET_NUM 	0xF
+
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -48,6 +51,41 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
+char* User2System(int virtAddr, int limit)
+{
+	int i; 
+	int oneChar;
+	char* kernelBuf = NULL;
+	kernelBuf = new char[limit + 1]; 
+	if (kernelBuf == NULL)
+		return kernelBuf;
+
+	memset(kernelBuf, 0, limit + 1);
+
+	for (i = 0; i < limit; i++)
+	{
+		machine->ReadMem(virtAddr + i, 1, &oneChar);
+		kernelBuf[i] = (char)oneChar;
+		if (oneChar == 0)
+			break;
+	}
+	return kernelBuf;
+}
+
+int System2User(int virtAddr, int len, char* buffer)
+{
+	if (len < 0) return -1;
+	if (len == 0)return len;
+	int i = 0;
+	int oneChar = 0;
+	do {
+		oneChar = (int)buffer[i];
+		machine->WriteMem(virtAddr + i, 1, oneChar);
+		i++;
+	} while (i < len && oneChar != 0);
+	return i;
+}
+
 void IncreasePC()
 {
 	machine->registers[PrevPCReg] = machine->registers[PCReg];
@@ -56,19 +94,34 @@ void IncreasePC()
 }
 
 int ReadInt() {
-	
+	int number = 0;
+	int nDigit = 0;
+	char* buffer = new char[MAX_INT_LENGTH];
+	nDigit = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
+	int i = (buffer[0] == '-' ? 1:0);
+	for (; i < nDigit; ++i) 
+		number = number * 10 + (int) (buffer[i] & MASK_GET_NUM);
+					
+	number = buffer[0] == '-' ? -1 * number : number;
+	machine->WriteRegister(2, number);
+	delete buffer;
+	return number;
 }
 
 void PrintInt(int number) {
-
+	
 }
 
 char ReadChar() {
-
+	int sz;
+	char buffer[MAX_INT_LENGTH];
+	size = gSynchConsole->Read(buf, MAX_INT_LENGTH);
+	machine->WriteRegister(2, buffer[size-1]);
+	return buffer; 
 }
 
 void PrintChar(char character) {
-
+	gSynchConsole->Write(&character, 1);
 }
 
 void ReadString (char[] buffer, int length) {
@@ -91,37 +144,37 @@ ExceptionHandler(ExceptionType which)
 
 		case PageFaultException:
 			printf("\nNo valid translation found.\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case ReadOnlyException:
 			printf("\nWrite attempted to page marked \"read-only\".\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case BusErrorException:
 			printf("\nTranslation resulted in an invalid physical address.\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case AddressErrorException:
 			printf("\nUnaligned reference or one that was beyond the end of the address space.\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case OverflowException:
 			printf("\nInteger overflow in add or sub..\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case IllegalInstrException:
 			printf("\nUnimplemented or reserved instr.\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
 		case NumExceptionTypes:
 			printf("\nNumExceptionTypes\n");
-			interrupt->Halt();
+			ASSERT(FALSE);
 			break;
 
     		case SyscallException 
@@ -133,12 +186,14 @@ ExceptionHandler(ExceptionType which)
 					break;	
 
 				case ReadInt:
+					DEBUG('a', "Read integer number from console.\n");
 					ReadInt();
 					interrupt->Halt();
 					IncreasePC();
 					break;			
 
 				case PrintInt:
+					DEBUG('a', "Print integer number from console.\n");
 					PrintInt(ReadInt());
 					interrupt->Halt();
 					IncreasePC();
