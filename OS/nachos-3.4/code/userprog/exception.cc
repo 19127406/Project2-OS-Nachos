@@ -141,7 +141,9 @@ void PrintInt(int number) {
 	int nDigit = 0;
 	int i = 0;
        	char* buffer = new char[MAX_INT_LENGTH]
-	int temp1 = = number;
+	int temp = = number;
+	
+	// Check positive / negative
 	if(number < 0) {
 		isNegative = true;
                 temp *= -1; 
@@ -149,13 +151,14 @@ void PrintInt(int number) {
 		i = 1;
         } 
 	
+	// Count digits of number
 	while(temp) {
     		nDigit++;
 		size++;
                 temp /= 10;
       	}	
         
-	            
+	// Convert number to char array            
 	for (; i < MAX_INT_LENGTH; i++) {
 		if (nDigit == 0) 
 			buffer[i] = '\0';
@@ -174,12 +177,14 @@ char ReadChar() {
 	char buffer[MAX_INT_LENGTH];
 	int size = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
 	if (size > 1) {
-		printf("\nError: Only 1 character is acceptable.\n");
+		printf("\nError: Only 1 character is allowed.\n");
 		machine->WriteRegister(2, 0);
+		return 0;
 	}
 	else if (numBytes == 0) {
 		printf("\nError: Character cannot be null.\n");
 		machine->WriteRegister(2, 0);
+		return 0;
 	}
 	else {
 		char ch = buffer[0];
@@ -192,12 +197,25 @@ void PrintChar(char character) {
 	gSynchConsole->Write(&character, 1);
 }
 
-void ReadString(char[] buffer, int length) {
-
+void ReadString(char* buffer, int length) {
+	int virtAddr = machine->ReadRegister(4); 	// Lay dia chi tham so buffer truyen vao tu thanh ghi so 4
+	length = machine->ReadRegister(5); 		// Lay do dai toi da cua chuoi nhap vao tu thanh ghi so 5
+	buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
+	gSynchConsole->Read(buffer, length); 		// Goi ham Read cua SynchConsole de doc chuoi
+	System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
+	delete buffer;
 }
 
-void PrintString(char[] buffer) {
+void PrintString(char* buffer) {
+	int virtAddr = machine->ReadRegister(4); 	// Lay dia chi cua tham so buffer tu thanh ghi so 4
+	buffer = User2System(virtAddr, 1023); 		// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 1023 ki tu
+	int length = 0;
 
+	while (buffer[length] != 0) 
+		length++; 				// Dem do dai that cua chuoi
+
+	gSynchConsole->Write(buffer, length + 1); 	// Goi ham Write cua SynchConsole de in chuoi
+	delete buffer;
 }
 
 void
@@ -253,47 +271,45 @@ ExceptionHandler(ExceptionType which)
    					interrupt->Halt();
 					break;	
 
-				case ReadInt:
+				case SC_ReadInt:
 					ReadInt();
 					interrupt->Halt();
 					IncreasePC();
 					break;			
 
-				case PrintInt:
+				case SC_PrintInt:
 					PrintInt(ReadInt());
 					interrupt->Halt();
 					IncreasePC();
 					break;		
 
-				case ReadChar:
+				case SC_ReadChar:
 					ReadChar();
 					interrupt->Halt();
 					IncreasePC();
 					break;		
 
-				case PrintChar:
+				case SC_PrintChar:
 					PrintChar(ReadChar());
 					interrupt->Halt();
 					IncreasePC();
 					break;		
 
-				case ReadString:
-					char* buffer = new char[MAX_STRING_LENGTH];
+				case SC_ReadString:
+					char* buffer;
 					int length;
 					ReadString(buffer, length);
 					interrupt->Halt();
 					IncreasePC();
 					break;		
 
-				case PrintString:
-					char* buffer = new char[MAX_STRING_LENGTH];
+				case SC_PrintString:
+					char* buffer;
 					int length;
-					ReadString(buffer, length);
 					PrintString(buffer, length);
 					interrupt->Halt();
 					IncreasePC();
 					break;		
-
 			}
 	
 		default:
