@@ -26,7 +26,6 @@
 #include "syscall.h"
 #include "math.h"
 
-#define MAX_INT 		2147483647
 #define MAX_INT_LENGTH 		10
 #define MAX_STRING_LENGTH	255
 
@@ -207,7 +206,7 @@ void ReadString(char* buffer, int length) {
 
 void PrintString(char* buffer) {
 	int virtAddr = machine->ReadRegister(4);
-	buffer = User2System(virtAddr, 1023); 		// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 1023 ki tu
+	buffer = User2System(virtAddr, MAX_STRING_LENGTH);	// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 255 ki tu
 	int length = 0;
 
 	while (buffer[length] != 0) 
