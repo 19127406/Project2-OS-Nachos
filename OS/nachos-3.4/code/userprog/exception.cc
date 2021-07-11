@@ -140,8 +140,8 @@ void PrintInt(int number) {
 	bool isNegative = false;
 	int nDigit = 0;
 	int i = 0;
-       	char* buffer = new char[MAX_INT_LENGTH]
-	int temp = = number;
+       	char* buffer = new char[MAX_INT_LENGTH];
+	int temp = number;
 	
 	// Check positive / negative
 	if(number < 0) {
@@ -154,7 +154,6 @@ void PrintInt(int number) {
 	// Count digits of number
 	while(temp) {
     		nDigit++;
-		size++;
                 temp /= 10;
       	}	
         
@@ -163,7 +162,7 @@ void PrintInt(int number) {
 		if (nDigit == 0) 
 			buffer[i] = '\0';
 		else {
-			buffer[i] = (char)((number / (pow(10, nDigit - 1)) % 10) + 48);
+			buffer[i] = (char)(((int)(number / pow(10, nDigit - 1)) % 10) + 48);
 			nDigit--;
 		}
 	}
@@ -181,7 +180,7 @@ char ReadChar() {
 		machine->WriteRegister(2, 0);
 		return 0;
 	}
-	else if (numBytes == 0) {
+	else if (size == 0) {
 		printf("\nError: Character cannot be null.\n");
 		machine->WriteRegister(2, 0);
 		return 0;
@@ -198,23 +197,23 @@ void PrintChar(char character) {
 }
 
 void ReadString(char* buffer, int length) {
-	int virtAddr = machine->ReadRegister(4); 	// Lay dia chi tham so buffer truyen vao tu thanh ghi so 4
-	length = machine->ReadRegister(5); 		// Lay do dai toi da cua chuoi nhap vao tu thanh ghi so 5
+	int virtAddr = machine->ReadRegister(4); 	
+	length = machine->ReadRegister(5); 		
 	buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
-	gSynchConsole->Read(buffer, length); 		// Goi ham Read cua SynchConsole de doc chuoi
+	gSynchConsole->Read(buffer, length); 	
 	System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
 	delete buffer;
 }
 
 void PrintString(char* buffer) {
-	int virtAddr = machine->ReadRegister(4); 	// Lay dia chi cua tham so buffer tu thanh ghi so 4
+	int virtAddr = machine->ReadRegister(4);
 	buffer = User2System(virtAddr, 1023); 		// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 1023 ki tu
 	int length = 0;
 
 	while (buffer[length] != 0) 
-		length++; 				// Dem do dai that cua chuoi
+		length++; 	
 
-	gSynchConsole->Write(buffer, length + 1); 	// Goi ham Write cua SynchConsole de in chuoi
+	gSynchConsole->Write(buffer, length + 1); 	
 	delete buffer;
 }
 
@@ -263,7 +262,7 @@ ExceptionHandler(ExceptionType which)
 			ASSERT(FALSE);
 			break;
 
-    		case SyscallException 
+    		case SyscallException:
 			switch (type)
 			{
 				case SC_Halt:
@@ -296,20 +295,23 @@ ExceptionHandler(ExceptionType which)
 					break;		
 
 				case SC_ReadString:
+				{
 					char* buffer;
 					int length;
 					ReadString(buffer, length);
 					interrupt->Halt();
 					IncreasePC();
-					break;		
+					break;	
+				}	
 
 				case SC_PrintString:
+				{
 					char* buffer;
-					int length;
-					PrintString(buffer, length);
+					PrintString(buffer);
 					interrupt->Halt();
 					IncreasePC();
-					break;		
+					break;	
+				}	
 			}
 	
 		default:
