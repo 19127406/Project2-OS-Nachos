@@ -2,7 +2,11 @@
 
 int main() {
 	
-	int number = 1;
+	int number;
+	PrintString("Input a number: ");
+	number = ReadInt();
+	PrintString("Inputted number: ");
+	PrintInt(number);
 	Halt();
 	return 0;
 }

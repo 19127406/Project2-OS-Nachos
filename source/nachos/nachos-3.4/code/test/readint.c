@@ -1,5 +1,6 @@
 #include "syscall.h"
 
 int main() {
-	Halt();
+	int number = ReadInt();
+	return 0;
 }
