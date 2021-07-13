@@ -60,9 +60,9 @@ char* User2System(int virtAddr, int limit)
 	kernelBuf = new char[limit + 1]; 
 	if (kernelBuf == NULL)
 		return kernelBuf;
-
+		
 	memset(kernelBuf, 0, limit + 1);
-
+	
 	for (i = 0; i < limit; i++)
 	{
 		machine->ReadMem(virtAddr + i, 1, &oneChar);
@@ -79,7 +79,7 @@ int System2User(int virtAddr, int len, char* buffer)
 	if (len == 0)return len;
 	int i = 0;
 	int oneChar = 0;
-	do {
+	do{
 		oneChar = (int)buffer[i];
 		machine->WriteMem(virtAddr + i, 1, oneChar);
 		i++;
@@ -89,131 +89,11 @@ int System2User(int virtAddr, int len, char* buffer)
 
 void IncreasePC()
 {
-	machine->registers[PrevPCReg] = machine->registers[PCReg];
-	machine->registers[PCReg] = machine->registers[NextPCReg];
-	machine->registers[NextPCReg] += 4;
-}
-
-int ReadInt() {
-	int number = 0;
-	int nDigit = 0;
-	char* buffer = new char[MAX_INT_LENGTH];
-	nDigit = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
-
-	// Check positive / negative
-	int i = (buffer[0] == '-' ? 1:0);
-
-	// Check if unvalid number -> return 0
-	for(int j = i; j < nDigit; j++) {
-		/// Ex: 3.000
-          	if (buffer[j] == '.') { 
-                	for(int k = j + 1; k < nDigit; k++) {
-                        	if(buffer[k] != '0') {
-                                	printf("\nError: The integer number is not valid\n");
-                                    	machine->WriteRegister(2, 0);
-                                    	delete buffer;
-                                    	return 0;
-                                }
-                        }			
-                        break;                           
-              	}
-                else if ((int)buffer[i] < 48 || (int)buffer[i] > 57) {
-                	printf("\nError: The integer number is not valid\n");
-                        machine->WriteRegister(2, 0);
-                        delete buffer;
-                        return 0;
-              	}    
-    	}
-
-	// Convert to integer
-	for (; i < nDigit; i++) 
-		number = number * 10 + (int)(buffer[i] - 48);
-					
-	number = buffer[0] == '-' ? -1 * number : number;
-	machine->WriteRegister(2, number);
-	delete buffer;
-	return number;
-}
-
-void PrintInt(int number) {
-	bool isNegative = false;
-	int nDigit = 0;
-	int i = 0;
-       	char* buffer = new char[MAX_INT_LENGTH];
-	int temp = number;
-	
-	// Check positive / negative
-	if(number < 0) {
-		isNegative = true;
-                temp *= -1; 
-		buffer[i] = '-';
-		i = 1;
-        } 
-	
-	// Count digits of number
-	while(temp) {
-    		nDigit++;
-                temp /= 10;
-      	}	
-        
-	// Convert number to char array            
-	for (; i < MAX_INT_LENGTH; i++) {
-		if (nDigit == 0) 
-			buffer[i] = '\0';
-		else {
-			buffer[i] = (char)(((int)(number / pow(10, nDigit - 1)) % 10) + 48);
-			nDigit--;
-		}
-	}
-	
-	gSynchConsole->Write(buffer, i);
-       	delete buffer;
-        return;
-}
-
-char ReadChar() {
-	char buffer[MAX_INT_LENGTH];
-	int size = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
-	if (size > 1) {
-		printf("\nError: Only 1 character is allowed.\n");
-		machine->WriteRegister(2, 0);
-		return 0;
-	}
-	else if (size == 0) {
-		printf("\nError: Character cannot be null.\n");
-		machine->WriteRegister(2, 0);
-		return 0;
-	}
-	else {
-		char ch = buffer[0];
-		machine->WriteRegister(2, ch);
-		return ch; 
-	}
-}
-
-void PrintChar(char character) {
-	gSynchConsole->Write(&character, 1);
-}
-
-void ReadString(char* buffer, int length) {
-	int virtAddr = machine->ReadRegister(4); 	
-	length = machine->ReadRegister(5); 		
-	buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
-	gSynchConsole->Read(buffer, length); 	
-	System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
-	delete buffer;
-}
-
-void PrintString(char* buffer) {
-	int virtAddr = machine->ReadRegister(4);
-	buffer = User2System(virtAddr, MAX_STRING_LENGTH);	// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 255 ki tu
-	int length = 0;
-
-	while (buffer[length] != 0) 
-		length++; 	
-
-	gSynchConsole->Write(buffer, length + 1); 	
-	delete buffer;
+	int counter = machine->ReadRegister(PCReg);
+   	machine->WriteRegister(PrevPCReg, counter);
+    	counter = machine->ReadRegister(NextPCReg);
+    	machine->WriteRegister(PCReg, counter);
+   	machine->WriteRegister(NextPCReg, counter + 4);
 }
 
 void
@@ -270,45 +150,148 @@ ExceptionHandler(ExceptionType which)
 					break;	
 
 				case SC_ReadInt:
-					ReadInt();
-					interrupt->Halt();
+				{
+					int number = 0;
+					char* buffer = new char[MAX_INT_LENGTH];
+					int bytesRead = gSynchConsole->Read(buffer, MAX_INT_LENGTH);
+					int nDigit = 0;
+
+					// Check positive / negative
+					int i = buffer[0] == '-' ? 1:0;
+
+					// Check if unvalid number -> return 0
+					for(int j = i; j < bytesRead; j++) {
+						// Ex: 3.000
+          					if (buffer[j] == '.') { 
+                					for(int k = j + 1; k < nDigit; k++) {
+                        					if(buffer[k] != '0') {
+                                					printf("\nError: The integer number is not valid\n");
+                                    					machine->WriteRegister(2, 0);
+                                    					delete buffer;
+									IncreasePC();
+                                    					return;
+                                				}
+                        				}
+							nDigit = j - 1;			
+                        				break;                           
+              					}
+						// Ex: abc...
+               				 	else if ((int)buffer[j] < 48 || (int)buffer[j] > 57) {
+                					printf("\nError: The integer number is not valid\n");
+                        				machine->WriteRegister(2, 0);
+                        				delete buffer;
+							IncreasePC();
+                        				return;
+              					} 
+						nDigit = j;   
+    					}
+
+					// Convert to integer
+					for (; i <= nDigit; i++) 
+						number = number * 10 + (int)(buffer[i] - 48);
+					
+					number = buffer[0] == '-' ? -1 * number : number;
+					machine->WriteRegister(2, number);
+					delete buffer;
 					IncreasePC();
-					break;			
+					interrupt->Halt();
+					break;	
+				}		
 
 				case SC_PrintInt:
-					PrintInt(ReadInt());
-					interrupt->Halt();
+				{
+					int number = machine->ReadRegister(4);
+					int nDigit = 0;
+					int i = 0;
+       					char* buffer = new char[MAX_INT_LENGTH];
+					int temp = number;
+	
+					// Check positive / negative
+					if(number < 0) {
+                				temp *= -1; 
+						buffer[i] = '-';
+						i = 1;
+        				} 
+	
+					// Count digits of number
+					while(temp) {
+    						nDigit++;
+                				temp /= 10;
+      					}	
+        
+					// Convert number to char array            
+					for (; i < MAX_INT_LENGTH; i++) {
+						if (nDigit == 0) 
+							buffer[i] = '\0';
+						else {
+							buffer[i] = (char)(((int)(number / pow(10, nDigit - 1)) % 10) + 48);
+							nDigit--;
+						}
+					}
+	
+					gSynchConsole->Write(buffer, i);
+       					delete buffer;
 					IncreasePC();
-					break;		
+					break;	
+				}	
 
 				case SC_ReadChar:
-					ReadChar();
-					interrupt->Halt();
+				{
+					char* buffer = new char[MAX_STRING_LENGTH];
+					int bytesRead = gSynchConsole->Read(buffer, MAX_STRING_LENGTH);
+					if (bytesRead > 1) {
+						printf("\nError: Only 1 character is allowed.\n");
+						machine->WriteRegister(2, 0);
+					}
+					else if (bytesRead == 0) {
+						printf("\nError: Character cannot be null.\n");
+						machine->WriteRegister(2, 0);
+					}
+					else {
+						char ch = buffer[0];
+						machine->WriteRegister(2, ch);
+					}
+					delete buffer;
 					IncreasePC();
-					break;		
+					interrupt->Halt();
+					break;	
+				}	
 
 				case SC_PrintChar:
-					PrintChar(ReadChar());
-					interrupt->Halt();
+				{
+					char ch = (char)machine->ReadRegister(4);
+					gSynchConsole->Write(&ch, 1);
 					IncreasePC();
+					interrupt->Halt();
 					break;		
+				}
 
 				case SC_ReadString:
 				{
-					char* buffer;
-					int length;
-					ReadString(buffer, length);
-					interrupt->Halt();
+					int virtAddr = machine->ReadRegister(4); 	
+					int length = machine->ReadRegister(5); 		
+					char* buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
+					gSynchConsole->Read(buffer, length); 	
+					System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
+					delete buffer;
 					IncreasePC();
+					interrupt->Halt();
 					break;	
 				}	
 
 				case SC_PrintString:
 				{
-					char* buffer;
-					PrintString(buffer);
-					interrupt->Halt();
+					int virtAddr = machine->ReadRegister(4);
+					char* buffer = User2System(virtAddr, MAX_STRING_LENGTH);	// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 255 ki tu
+					int length = 0;
+
+					while (buffer[length] != 0) 
+						length++; 	
+
+					gSynchConsole->Write(buffer, length + 1); 	
+					delete buffer;
 					IncreasePC();
+					interrupt->Halt();
 					break;	
 				}	
 			}

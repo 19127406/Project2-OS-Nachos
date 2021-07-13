@@ -7,6 +7,5 @@ int main() {
 	number = ReadInt();
 	PrintString("Inputted number: ");
 	PrintInt(number);
-	Halt();
 	return 0;
 }
