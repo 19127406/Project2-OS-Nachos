@@ -88,11 +88,9 @@ int System2User(int virtAddr, int len, char* buffer)
 
 void IncreasePC()
 {
-	int counter = machine->ReadRegister(PCReg);
-   	machine->WriteRegister(PrevPCReg, counter);
-    	counter = machine->ReadRegister(NextPCReg);
-    	machine->WriteRegister(PCReg, counter);
-   	machine->WriteRegister(NextPCReg, counter + 4);
+	machine->registers[PrevPCReg] = machine->registers[PCReg];
+	machine->registers[PCReg] = machine->registers[NextPCReg];
+	machine->registers[NextPCReg] += 4;
 }
 
 int pow(int a, int b)
@@ -211,8 +209,7 @@ ExceptionHandler(ExceptionType which)
 					machine->WriteRegister(2, number);
 					delete buffer;
 					IncreasePC();
-					interrupt->Halt();
-					break;	
+					return;	
 				}		
 
 				case SC_PrintInt:
@@ -270,7 +267,6 @@ ExceptionHandler(ExceptionType which)
 					}
 					delete buffer;
 					IncreasePC();
-					interrupt->Halt();
 					break;	
 				}	
 
@@ -292,7 +288,6 @@ ExceptionHandler(ExceptionType which)
 					System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
 					delete buffer;
 					IncreasePC();
-					interrupt->Halt();
 					break;	
 				}	
 
@@ -308,7 +303,6 @@ ExceptionHandler(ExceptionType which)
 					gSynchConsole->Write(buffer, length + 1); 	
 					delete buffer;
 					IncreasePC();
-					interrupt->Halt();
 					break;	
 				}	
 			}
