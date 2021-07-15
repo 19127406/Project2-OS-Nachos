@@ -6,9 +6,7 @@ main()
     int number;
     PrintString("Input a number: ");
     number = ReadInt();
-    PrintString("Inputted number: ");
-    PrintInt(number);
-    PrintString("\n");
+    PrintString(number);
     Halt();
     return 0;
 }

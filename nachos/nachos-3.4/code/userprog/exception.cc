@@ -106,10 +106,7 @@ int pow(int value, int power) {
 void
 ExceptionHandler(ExceptionType which)
 {
-    	int type = machine->ReadRegister(2);
-
-	if (gSynchConsole == NULL)
-		gSynchConsole = new SynchConsole();		
+    	int type = machine->ReadRegister(2);		
 	
 	switch (which)
 	{

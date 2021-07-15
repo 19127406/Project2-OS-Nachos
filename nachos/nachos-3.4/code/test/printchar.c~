@@ -5,7 +5,7 @@ main()
 {
     char ch;
     PrintString("Input a character: ");
-    ch = ReadChar();
+    number = ReadChar();
     PrintString("Inputted character: ");
     PrintChar(ch);
     PrintString("\n");

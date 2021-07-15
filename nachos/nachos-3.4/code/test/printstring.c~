@@ -20,5 +20,7 @@ main()
 	ReadString(str, 200);
 	PrintString("Inputted string: ");	
 	PrintString(str);
+        PrintString("\n");
+	Halt();
 	return 0;
 }
