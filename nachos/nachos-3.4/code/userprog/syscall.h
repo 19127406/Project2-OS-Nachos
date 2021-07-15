@@ -35,6 +35,8 @@
 #define SC_PrintChar  		14
 #define SC_ReadString  		15
 #define SC_PrintString  	16
+#define SC_Help			17
+#define SC_Ascii		18
 
 #ifndef IN_ASM
 
@@ -136,7 +138,10 @@ void PrintInt(int number);
 char ReadChar();
 void PrintChar(char character);
 void ReadString (char buffer[], int length);
-void PrintString (char buffer[]);	
+void PrintString (char buffer[]);
+
+void Help();
+void Ascii();	
 
 #endif /* IN_ASM */
 

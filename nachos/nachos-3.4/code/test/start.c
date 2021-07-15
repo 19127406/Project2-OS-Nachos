@@ -178,6 +178,22 @@ PrintString:
  	j	$31
  	.end PrintString
 
+  	.globl Help
+ 	.ent	Help
+Help:
+ 	addiu $2,$0,SC_Help
+ 	syscall
+ 	j	$31
+ 	.end Help
+
+  	.globl Ascii
+ 	.ent	Ascii
+Ascii:
+ 	addiu $2,$0,SC_Ascii
+ 	syscall
+ 	j	$31
+ 	.end Ascii
+
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

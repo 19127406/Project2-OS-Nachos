@@ -93,22 +93,14 @@ void IncreasePC()
 	machine->registers[NextPCReg] += 4;
 }
 
-int pow(int a, int b)
-{
-    if (b == 0)
-        return 1;
-    int answer = a;
-    int increment = a;
-    int i, j;
-    for(i = 1; i < b; i++)
-    {
-        for(j = 1; j < a; j++)
-        {
-            answer += increment;
-        }
-        increment = answer;
-    }
-    return answer;
+int pow(int value, int power) {
+	if (power == 0)
+		return 1;
+
+	int result = 1;
+	for (int i = 0; i < power; ++i) 
+		result *= value;
+	return (result);
 }
 
 void
@@ -116,6 +108,9 @@ ExceptionHandler(ExceptionType which)
 {
     	int type = machine->ReadRegister(2);
 
+	if (gSynchConsole == NULL)
+		gSynchConsole = new SynchConsole();		
+	
 	switch (which)
 	{
 		case NoException:
@@ -235,8 +230,10 @@ ExceptionHandler(ExceptionType which)
         
 					// Convert number to char array            
 					for (; i < MAX_INT_LENGTH; i++) {
-						if (nDigit == 0) 
-							buffer[i] = '\0';
+						if (nDigit == 0) {
+							buffer[i] = 0;
+							break;
+						}
 						else {
 							buffer[i] = (char)(((int)(number / pow(10, nDigit - 1)) % 10) + 48);
 							nDigit--;
@@ -246,7 +243,7 @@ ExceptionHandler(ExceptionType which)
 					gSynchConsole->Write(buffer, i);
        					delete buffer;
 					IncreasePC();
-					break;	
+					return;	
 				}	
 
 				case SC_ReadChar:
@@ -267,7 +264,7 @@ ExceptionHandler(ExceptionType which)
 					}
 					delete buffer;
 					IncreasePC();
-					break;	
+					return;	
 				}	
 
 				case SC_PrintChar:
@@ -275,8 +272,7 @@ ExceptionHandler(ExceptionType which)
 					char ch = (char)machine->ReadRegister(4);
 					gSynchConsole->Write(&ch, 1);
 					IncreasePC();
-					interrupt->Halt();
-					break;		
+					return;		
 				}
 
 				case SC_ReadString:
@@ -284,11 +280,11 @@ ExceptionHandler(ExceptionType which)
 					int virtAddr = machine->ReadRegister(4); 	
 					int length = machine->ReadRegister(5); 		
 					char* buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
-					gSynchConsole->Read(buffer, length); 	
+					length = gSynchConsole->Read(buffer, length); 	
 					System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
 					delete buffer;
 					IncreasePC();
-					break;	
+					return;	
 				}	
 
 				case SC_PrintString:
@@ -303,13 +299,27 @@ ExceptionHandler(ExceptionType which)
 					gSynchConsole->Write(buffer, length + 1); 	
 					delete buffer;
 					IncreasePC();
-					break;	
+					return;	
+				}
+
+				case SC_Ascii:
+				{
+					IncreasePC();
+					return;
+				}
+
+				case SC_Help:
+				{
+					IncreasePC();
+					return;
 				}	
 			}
+			break;
 	
 		default:
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);
+			break;
     	}
 }
 
