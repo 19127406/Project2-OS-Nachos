@@ -1,32 +1,69 @@
-/* sort.c 
- *    Test program to sort a large number of integers.
- *
- *    Intention is to stress virtual memory system.
- *
- *    Ideally, we could read the unsorted array off of the file system,
- *	and store the result back to the file system!
- */
-
 #include "syscall.h"
 
-int A[1024];	/* size of physical memory; with code, we'll run out of space!*/
+int A[100];
+char c1 = ' ';
+
+void swap(int a, int b)
+{
+	int tmp = a;
+	a = b;
+	b = tmp;
+}
+
+void bubble_sort(int num_ele)
+{
+	int i = 0;
+	int j = i + 1;
+	for(i; i < num_ele; i += 1)
+	{
+		for(j; j < num_ele; j += 1)
+		{
+			if(A[i] > A[j])
+				swap(A[i], A[j]);
+		}
+	}
+}
+
+void PrintArray(int num_ele)
+{
+	int i = 0;
+	for(i; i < num_ele; i += 1)
+	{
+		PrintInt(A[i]);
+		PrintChar(c1);
+	}
+	PrintChar('\n');
+}
 
 int
 main()
 {
-    int i, j, tmp;
+	int n = 0;
+	int i = 0;
 
-    /* first initialize the array, in reverse sorted order */
-    for (i = 0; i < 1024; i++)		
-        A[i] = 1024 - i;
+    PrintString("Input size of array: ");
+    n = ReadInt();
+    if(n > 100)
+    {
+    	PrintString("Array must have size below or equal 100\nEnd program\n");
+    	return 0;
+    }
 
-    /* then sort! */
-    for (i = 0; i < 1023; i++)
-        for (j = i; j < (1023 - i); j++)
-	   if (A[j] > A[j + 1]) {	/* out of order -> need to swap ! */
-	      tmp = A[j];
-	      A[j] = A[j + 1];
-	      A[j + 1] = tmp;
-    	   }
-    Exit(A[0]);		/* and then we're done -- should be 0! */
+    PrintString("Input array elements:\n");
+    for(i; i < n; i += 1)
+    {
+    	PrintString("element - ");
+    	PrintInt(i);
+    	PrintString(" : ");
+    	A[i] = ReadInt();
+    	PrintChar('\n');
+    }
+
+    PrintString("Input array: ");
+    PrintArray(n);
+    bubble_sort(n);
+    PrintString("\nSorted array: ");
+    PrintArray(n);
+
+    return 0;
 }

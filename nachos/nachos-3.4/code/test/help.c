@@ -1,20 +1,22 @@
-/* halt.c
- *	Simple program to test whether running a user program works.
- *	
- *	Just do a "syscall" that shuts down the OS.
- *
- * 	NOTE: for some reason, user programs with global data structures 
- *	sometimes haven't worked in the Nachos environment.  So be careful
- *	out there!  One option is to allocate data structures as 
- * 	automatics within a procedure, but if you do this, you have to
- *	be careful to allocate a big enough stack to hold the automatics!
- */
-
 #include "syscall.h"
 
 int
 main()
 {
+
+	PrintString("Members:\n");
+	PrintString("Ngo Huy Hoang - 19127406\n");
+	PrintString("Vo Hoang Gia Bao - 19127102\n");
+	PrintString("Nguyen Tuan Kiet - 19127457\n");
+	PrintString("Trieu Nguyen Minh Huy - 19127\n");
+	PrintString("Truong The Phu - 19127\n");
+
+	PrintString("\nAbout sort program:\n");
+	PrintString("This program will take an array of n (n <= 100) intergers and sort the array using bubble sort algorithm.\n");
+
+	PrintString("\nAbout ascii program:\n");
+	PrintString("This program will print out ASCII table.\n\n");
+
     Halt();
-    /* not reached */
+    return 0;
 }
