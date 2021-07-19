@@ -37,6 +37,7 @@
 #define SC_PrintString  	16
 #define SC_Help			17
 #define SC_Ascii		18
+#define SC_Sort			19
 
 #ifndef IN_ASM
 
@@ -141,7 +142,8 @@ void ReadString (char buffer[], int length);
 void PrintString (char buffer[]);
 
 void Help();
-void Ascii();	
+void Ascii();
+void Sort(int* arr, int n);	
 
 #endif /* IN_ASM */
 

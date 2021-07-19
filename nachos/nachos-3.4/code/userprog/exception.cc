@@ -27,6 +27,7 @@
 
 #define MAX_INT_LENGTH 		10
 #define MAX_STRING_LENGTH	255
+#define ARRAY_MAX_LENGTH	100
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -306,6 +307,12 @@ ExceptionHandler(ExceptionType which)
 				}
 
 				case SC_Help:
+				{
+					IncreasePC();
+					return;
+				}
+
+				case SC_Sort:
 				{
 					IncreasePC();
 					return;
