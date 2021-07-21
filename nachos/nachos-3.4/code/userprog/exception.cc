@@ -26,7 +26,7 @@
 #include "syscall.h"
 
 #define MAX_INT_LENGTH 		10
-#define MAX_STRING_LENGTH	255
+#define MAX_STRING_LENGTH	200
 #define ARRAY_MAX_LENGTH	100
 
 //----------------------------------------------------------------------
@@ -277,9 +277,9 @@ ExceptionHandler(ExceptionType which)
 				{
 					int virtAddr = machine->ReadRegister(4); 	
 					int length = machine->ReadRegister(5); 		
-					char* buffer = User2System(virtAddr, length); 	// Copy chuoi tu vung nho User Space sang System Space
+					char* buffer = User2System(virtAddr, length); 	
 					length = gSynchConsole->Read(buffer, length); 	
-					System2User(virtAddr, length, buffer); 		// Copy chuoi tu vung nho System Space sang vung nho User Space
+					System2User(virtAddr, length, buffer); 		
 					delete buffer;
 					IncreasePC();
 					return;	
@@ -288,10 +288,10 @@ ExceptionHandler(ExceptionType which)
 				case SC_PrintString:
 				{
 					int virtAddr = machine->ReadRegister(4);
-					char* buffer = User2System(virtAddr, MAX_STRING_LENGTH);	// Copy chuoi tu vung nho User Space sang System Space voi bo dem buffer dai 255 ki tu
+					char* buffer = User2System(virtAddr, MAX_STRING_LENGTH);
 					int length = 0;
 
-					while (buffer[length] != 0) 
+					while (buffer[length] != 0 && buffer[length] != '\n') 
 						length++; 	
 
 					gSynchConsole->Write(buffer, length + 1); 	

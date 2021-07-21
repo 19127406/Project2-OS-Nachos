@@ -1,7 +1,6 @@
 #include "syscall.h"
 
-int
-main()
+int main()
 {
     int number;
     PrintString("Input a number: ");
