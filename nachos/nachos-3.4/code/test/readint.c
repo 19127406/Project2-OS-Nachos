@@ -3,7 +3,12 @@
 int
 main()
 {
-    int number = ReadInt();
+    int number;
+    PrintString("Input a number: ");
+    number = ReadInt();
+    PrintString("You inputted number ");
+    PrintInt(number);
+    PrintString("\n");
     Halt();
     return 0;
 }
